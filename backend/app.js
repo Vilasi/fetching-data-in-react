@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises';
+import path from 'node:path';
 
 import bodyParser from 'body-parser';
 import express from 'express';
@@ -19,6 +20,12 @@ app.use((req, res, next) => {
 });
 
 app.get('/places', async (req, res) => {
+  //! The following commented-out code is only present to account for running the server outside of the /backend directory - say, one level higher
+  // const currentDir = process.cwd();
+  // console.log(currentDir);
+  // const fileContent = await fs.readFile(
+  //   path.join(currentDir, 'backend/data/places.json')
+  // );
   const fileContent = await fs.readFile('./data/places.json');
 
   const placesData = JSON.parse(fileContent);
