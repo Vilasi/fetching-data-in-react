@@ -26,3 +26,32 @@ async function getPlaces() {
     }
 }
 ```
+
+## Fetch error handling
+
+Error handling when using the fetch API inside of React is best accomplished using both the try/catch block - when inside of an async/await call - as well as a specific check to ensure our response status is ok. That is, when we call `const response = await fetch('http://localhost:3000/places');` inside of a try/catch, if the whole thing fails we will error our and be caught by the catch block. However, the response can fail while still successfully returning a value to response - that is, the response can return a `!response.ok`, which would not be natively caught by catch. Therein, we want to do an if check on the response.ok and throw our own error which will be caught in the catch. This can be further bolstered by checking for specific statuses inside of the if/else check - checking to see what kind of response status we got and throwing specific errors for that:
+
+```
+try {
+    setIsFetching(true);
+    const response = await fetch('http://localhost:3000/places');
+
+    if (response.ok) {
+        console.log('Fetch promise resolved: HTTP status successful');
+        const data = await response.json();
+        setAvailablePlaces([...data.places]);
+        setIsFetching(false);
+        console.log('Places have been set!');
+    } else {
+        setIsFetching(false);
+        if (response.status === 404) throw new Error('404, Not Found');
+        if (response.status === 500)
+        throw new Error('500, Internal Server Error');
+        throw new Error(response.status);
+    }
+} catch (error) {
+    console.error('Fetch', error);
+}
+```
+
+And, since this is React, in the catch, we can update the UI to reflect the error status. Often, this is done using a specified Error catching component of some sort
