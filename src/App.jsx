@@ -22,10 +22,7 @@ function App() {
         }
 
         const userPlaces = await response.json();
-        // console.log(
-        //   'const userPlaces = await response.json();',
-        //   typeof userPlaces.places
-        // );
+
         setUserPlaces(userPlaces.places);
         setIsFetching(false);
       } catch (error) {
@@ -34,9 +31,6 @@ function App() {
     }
     getUserPlaces();
   }, []);
-
-  // console.log('userPlaces.length:', userPlaces.length);
-  // console.log(userPlaces.places.length);
 
   function handleStartRemovePlace(place) {
     setModalIsOpen(true);
@@ -61,23 +55,35 @@ function App() {
 
   useEffect(() => {
     async function updateUserPlacesFetch() {
-      const data = { places: userPlaces };
+      const data = [...userPlaces];
+      console.log(
+        'The following is the userPlaces from within the app.js useEffect function'
+      );
+
       console.log(data);
       const requestOptions = {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ places: data }),
+        mode: 'cors',
       };
 
-      try {
-        const response = await fetch(
-          'http://localhost:3000/user-places',
-          requestOptions
-        );
-        const responseReceived = await response.json();
-        console.log(responseReceived);
-      } catch (error) {
-        console.error('Fetching userPlaces put request error');
+      if (data.length > 0) {
+        try {
+          const response = await fetch(
+            'http://localhost:3000/user-places',
+            requestOptions
+          );
+
+          if (!response.ok) {
+            throw new Error('The put request failed to update the userPlaces');
+          } else {
+            const responseReceived = await response.json();
+            console.log(responseReceived);
+          }
+        } catch (error) {
+          console.error('Fetching userPlaces put request error');
+        }
       }
     }
     updateUserPlacesFetch();

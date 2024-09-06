@@ -67,8 +67,6 @@ export default function AvailablePlaces({ onSelectPlace }) {
     setError(undefined);
   }
 
-  console.log(availablePlaces);
-
   if (error) {
     return (
       <ErrorPage
