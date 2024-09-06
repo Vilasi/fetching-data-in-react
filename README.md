@@ -54,4 +54,20 @@ try {
 }
 ```
 
-And, since this is React, in the catch, we can update the UI to reflect the error status. Often, this is done using a specified Error catching component of some sort
+And, since this is React, in the catch, we can update the UI to reflect the error status. Often, this is done using a specified Error catching component of some sort. Check the ErrorPage component in this directory to see an example.
+
+When building a component that handles and renders fetched data, it is common to have the following three things managed as state:
+
+1. The data you fetch - stored in state
+2. A boolean to see if the data is currently being fetched
+3. An error state, which is just undefined to start, and which gets the error message when there is one (If there is anything stored in this state, we render the error component).
+
+```
+const [availablePlaces, setAvailablePlaces] = useState([]);
+const [isFetching, setIsFetching] = useState(false);
+const [error, setError] = useState();
+```
+
+## Manipulating fetched data
+
+Data can, of course, be manipulated after it has been fetched. However, take care that, if you do any manipulations to it that take time to resolve - and you don't want to display it to the user until after the manipulation has finished - you have to set the isFetching state to false after this is finished, within the try/catch. Otherwise, if you place the isFetching state updating function after the try/catch (that is, only if the data manipulation doesn't return a promise [can't be used with async/await]), it will fire before the final data manipulation has finished. This is especially the case if you use async browser APIs, like the navigator.geolocation API, which perform asynchronously but which themselves don't return promises. Keep an eye out for these.

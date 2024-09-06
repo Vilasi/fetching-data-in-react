@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback } from 'react';
+import { useRef, useState, useCallback, useEffect } from 'react';
 
 import Places from './components/Places.jsx';
 import Modal from './components/Modal.jsx';
@@ -8,10 +8,35 @@ import logoImg from './assets/logo.png';
 
 function App() {
   const selectedPlace = useRef();
-
   const [userPlaces, setUserPlaces] = useState([]);
-
   const [modalIsOpen, setModalIsOpen] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
+
+  useEffect(() => {
+    async function getUserPlaces() {
+      setIsFetching(true);
+      try {
+        const response = await fetch('http://localhost:3000/user-places');
+        if (!response.ok) {
+          console.error('failed to get user places');
+        }
+
+        const userPlaces = await response.json();
+        // console.log(
+        //   'const userPlaces = await response.json();',
+        //   typeof userPlaces.places
+        // );
+        setUserPlaces(userPlaces.places);
+        setIsFetching(false);
+      } catch (error) {
+        console.log('Error fetching user places');
+      }
+    }
+    getUserPlaces();
+  }, []);
+
+  // console.log('userPlaces.length:', userPlaces.length);
+  // console.log(userPlaces.places.length);
 
   function handleStartRemovePlace(place) {
     setModalIsOpen(true);
@@ -33,6 +58,30 @@ function App() {
       return [selectedPlace, ...prevPickedPlaces];
     });
   }
+
+  useEffect(() => {
+    async function updateUserPlacesFetch() {
+      const data = { places: userPlaces };
+      console.log(data);
+      const requestOptions = {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      };
+
+      try {
+        const response = await fetch(
+          'http://localhost:3000/user-places',
+          requestOptions
+        );
+        const responseReceived = await response.json();
+        console.log(responseReceived);
+      } catch (error) {
+        console.error('Fetching userPlaces put request error');
+      }
+    }
+    updateUserPlacesFetch();
+  }, [userPlaces]);
 
   const handleRemovePlace = useCallback(async function handleRemovePlace() {
     setUserPlaces((prevPickedPlaces) =>
@@ -65,6 +114,8 @@ function App() {
           fallbackText="Select the places you would like to visit below."
           places={userPlaces}
           onSelectPlace={handleStartRemovePlace}
+          isLoading={isFetching}
+          loadingText="Fetching user places"
         />
 
         <AvailablePlaces onSelectPlace={handleSelectPlace} />
