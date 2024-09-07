@@ -71,3 +71,36 @@ const [error, setError] = useState();
 ## Manipulating fetched data
 
 Data can, of course, be manipulated after it has been fetched. However, take care that, if you do any manipulations to it that take time to resolve - and you don't want to display it to the user until after the manipulation has finished - you have to set the isFetching state to false after this is finished, within the try/catch. Otherwise, if you place the isFetching state updating function after the try/catch (that is, only if the data manipulation doesn't return a promise [can't be used with async/await]), it will fire before the final data manipulation has finished. This is especially the case if you use async browser APIs, like the navigator.geolocation API, which perform asynchronously but which themselves don't return promises. Keep an eye out for these.
+
+## Optimistic State Updating
+
+Sometimes, when we want to make a change to a database - add some data - we'll want that update to be reflected in the DOM. One way to accomplish this is with a little bit of a cheat: Optimistic State Updating.
+
+What we do here is: In a function where we're sending a fetch request to update our data, we will first set a state updating function that updates our state to reflect this updated data, and then, right after, instantiate our api call (the POST, Put, Patch, etc). Thereby, to the user, the state updates immediately to reflect the changed data, then in the background, the data is actually pushed to the backend/database
+
+This could look like the following. Note that , in this function (which is selecting a place for the user, which triggers a PUT request) the first thing that is done is that the userPlaces are updated using the selected place. Then, in the try/catch block, the PUT request is sent, with the catch variable resetting the state to the current (that is, the previous state before the new render cycle) state:
+
+```
+async function handleSelectPlace(selectedPlace) {
+    setUserPlaces((prevPickedPlaces) => {
+      if (!prevPickedPlaces) {
+        prevPickedPlaces = [];
+      }
+      if (prevPickedPlaces.some((place) => place.id === selectedPlace.id)) {
+        return prevPickedPlaces;
+      }
+      return [selectedPlace, ...prevPickedPlaces];
+    });
+
+    try {
+      await updateUserPlaces([selectedPlace, ...userPlaces]);
+    } catch (error) {
+      setUserPlaces(userPlaces);
+      console.log('Handle select place fetch failed');
+    }
+}
+```
+
+The opposite approach here would be to put that fetch function up above the state updating function, wherein we wouldn't be running the state update until after the fetch is completed.
+
+In that instance, it would be a good idea to implement some sort of loading bar/spinning wheel (or whatever other loading indicating component) thing into the UI for a better UX. heh
